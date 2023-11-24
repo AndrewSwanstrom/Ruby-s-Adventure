@@ -16,6 +16,8 @@ public class EnemyController : MonoBehaviour
     bool broken = true;
     
     Animator animator;
+
+    private RubyController rubyController;
     
     // Start is called before the first frame update
     void Start()
@@ -23,6 +25,20 @@ public class EnemyController : MonoBehaviour
         rigidbody2D = GetComponent<Rigidbody2D>();
         timer = changeTime;
         animator = GetComponent<Animator>();
+
+        GameObject rubyControllerObject = GameObject.FindWithTag("RubyController");
+
+        if (rubyControllerObject != null)
+        {
+            rubyController = rubyControllerObject.GetComponent<RubyController>(); //storing the rubyController in a variable
+
+            print ("Found the RubyConroller Script!");
+        }
+
+        if (rubyController == null)
+        {
+            print ("Cannot find GameController Script!");
+        }
     }
 
     void Update()
@@ -87,5 +103,10 @@ public class EnemyController : MonoBehaviour
         animator.SetTrigger("Fixed");
         
         smokeEffect.Stop();
+
+        if (rubyController != null)
+        {
+            rubyController.ChangeScore(1); //incrementing the score by 1
+        }
     }
 }

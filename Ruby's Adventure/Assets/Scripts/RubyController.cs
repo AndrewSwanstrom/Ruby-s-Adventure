@@ -1,12 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class RubyController : MonoBehaviour
 {
     public float speed = 3.0f;
     
     public int maxHealth = 5;
+
+    public int score = 0;
+    public TMP_Text scoreText;
+
+    public int winState = 0; //0 is currently playing, 1 is winning, and 2 is losing
+    public TMP_Text winText;
     
     public GameObject projectilePrefab;
     
@@ -43,8 +51,15 @@ public class RubyController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        horizontal = Input.GetAxis("Horizontal");
-        vertical = Input.GetAxis("Vertical");
+        if (currentHealth > 0)
+        {
+            horizontal = Input.GetAxis("Horizontal");
+            vertical = Input.GetAxis("Vertical");
+        } else {
+            horizontal = 0;
+            vertical = 0;
+            winState = 2; //the player lost, so winState is set to 2
+        }
         
         Vector2 move = new Vector2(horizontal, vertical);
         
@@ -65,12 +80,12 @@ public class RubyController : MonoBehaviour
                 isInvincible = false;
         }
         
-        if(Input.GetKeyDown(KeyCode.C))
+        if(Input.GetKeyDown(KeyCode.C) && currentHealth > 0)
         {
             Launch();
         }
         
-        if (Input.GetKeyDown(KeyCode.X))
+        if (Input.GetKeyDown(KeyCode.X) && currentHealth > 0)
         {
             RaycastHit2D hit = Physics2D.Raycast(rigidbody2d.position + Vector2.up * 0.2f, lookDirection, 1.5f, LayerMask.GetMask("NPC"));
             if (hit.collider != null)
@@ -82,11 +97,28 @@ public class RubyController : MonoBehaviour
                 }
             }
         }
+
+        ChangeWin();
     }
     
     void FixedUpdate()
     {
-        Vector2 position = rigidbody2d.position;
+        Vector2 position;
+        position.x = 0;
+        position. y = 0;
+
+        if (Input.GetKeyDown(KeyCode.R) && winState == 2) //resetting the game when pressing R
+        {
+            currentHealth = maxHealth;
+            ChangeHealth(currentHealth);
+            score = 0;
+            winState = 0;
+            position.x = 0;
+            position. y = 0;
+        } else {
+            position = rigidbody2d.position;
+        }
+        
         position.x = position.x + speed * horizontal * Time.deltaTime;
         position.y = position.y + speed * vertical * Time.deltaTime;
 
@@ -95,20 +127,52 @@ public class RubyController : MonoBehaviour
 
     public void ChangeHealth(int amount)
     {
-        if (amount < 0)
+        if (currentHealth > 0)
         {
-            if (isInvincible)
-                return;
+            if (amount < 0)
+            {
+                if (isInvincible)
+                    return;
+                
+                isInvincible = true;
+                invincibleTimer = timeInvincible;
+                
+                PlaySound(hitSound);
+            }
             
-            isInvincible = true;
-            invincibleTimer = timeInvincible;
+            currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
             
-            PlaySound(hitSound);
+            UIHealthBar.instance.SetValue(currentHealth / (float)maxHealth);
         }
-        
-        currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
-        
-        UIHealthBar.instance.SetValue(currentHealth / (float)maxHealth);
+    }
+
+    public void ChangeScore(int scoreAmount)
+    {   
+        score += scoreAmount;
+        scoreText.text = "Fixed Robots: " + score.ToString();
+        ScoreScript.instance.SetText(scoreText);
+
+        if (score == 2) //change this number to how many robots are in the scene
+        {
+            winState = 1;
+        }
+    }
+
+    public void ChangeWin()
+    {
+        if (winState == 1)
+        {
+            winText.text = "You Win! Game Created by Group 16";
+            WinTextScript.instance.SetText(winText);
+        } else if (winState == 2)
+        {
+            winText.text = "Game Over! Press R to Restart";
+            WinTextScript.instance.SetText(winText);
+        } else if (winState == 0)
+        {
+            winText.text = "";
+            WinTextScript.instance.SetText(winText);
+        }
     }
     
     void Launch()
