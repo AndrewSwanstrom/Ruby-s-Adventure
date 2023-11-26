@@ -105,7 +105,13 @@ MonoBehaviour:
   maxHealth: 5
   score: 0
   scoreText: {fileID: 0}
+  winState: 0
+  winText: {fileID: 0}
   projectilePrefab: {fileID: 1522562992868256305, guid: ffa76150de9b68048a21687c80febe5d, type: 3}
+  HealthPrefab: {fileID: 1880312122292683262, guid: 3c2e414dd4a375e4fa2c00c85e462713, type: 3}
+  DamagePrefab: {fileID: 3719034408360335408, guid: 97907f3bf296c9242a1257269ddbbfb6, type: 3}
+  DamageTime: 0.35
+  HealthTime: 0.35
   throwSound: {fileID: 8300000, guid: b2edfd40873655249ba0e01a5cf705be, type: 3}
   hitSound: {fileID: 8300000, guid: 9b1bb1f450b7d444fa4a8019d13519a7, type: 3}
   timeInvincible: 2

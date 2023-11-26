@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class RubyController : MonoBehaviour
 {
@@ -17,6 +18,15 @@ public class RubyController : MonoBehaviour
     public TMP_Text winText;
     
     public GameObject projectilePrefab;
+    public GameObject HealthPrefab;
+    public GameObject DamagePrefab;
+
+    public float DamageTime = 0.35f;
+    public float HealthTime = 0.35f;
+    bool IsReceivingDamage;
+    bool IsReceivingHealth;
+    float DamageTimer;
+    float HealthTimer;
     
     public AudioClip throwSound;
     public AudioClip hitSound;
@@ -79,6 +89,20 @@ public class RubyController : MonoBehaviour
             if (invincibleTimer < 0)
                 isInvincible = false;
         }
+
+        if (IsReceivingDamage)
+        {
+            DamageTimer -= Time.deltaTime;
+            if (DamageTimer < 0)
+                IsReceivingDamage = false;
+        }
+
+        if (IsReceivingHealth)
+        {
+            HealthTimer -= Time.deltaTime;
+            if (HealthTimer < 0)
+                IsReceivingHealth = false;
+        }
         
         if(Input.GetKeyDown(KeyCode.C) && currentHealth > 0)
         {
@@ -99,29 +123,23 @@ public class RubyController : MonoBehaviour
         }
 
         ChangeWin();
+
+        if (Input.GetKeyDown(KeyCode.R) && winState == 2){
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
     }
     
     void FixedUpdate()
     {
         Vector2 position;
         position.x = 0;
-        position. y = 0;
+        position.y = 0;
 
-        if (Input.GetKeyDown(KeyCode.R) && winState == 2) //resetting the game when pressing R
-        {
-            currentHealth = maxHealth;
-            ChangeHealth(currentHealth);
-            score = 0;
-            winState = 0;
-            position.x = 0;
-            position. y = 0;
-        } else {
-            position = rigidbody2d.position;
-        }
-        
+        position = rigidbody2d.position;
+
         position.x = position.x + speed * horizontal * Time.deltaTime;
         position.y = position.y + speed * vertical * Time.deltaTime;
-
+        
         rigidbody2d.MovePosition(position);
     }
 
@@ -143,6 +161,16 @@ public class RubyController : MonoBehaviour
             currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
             
             UIHealthBar.instance.SetValue(currentHealth / (float)maxHealth);
+
+            if (amount > 0){
+                GameObject DamageEffect = Instantiate(DamagePrefab, rigidbody2d.position + Vector2.up * 1f, Quaternion.identity);
+                IsReceivingDamage = true;
+                DamageTimer = DamageTime;
+            } else if (amount < 0){
+                GameObject HealthEffect = Instantiate(HealthPrefab, rigidbody2d.position + Vector2.up * 1f, Quaternion.identity);
+                IsReceivingHealth = true;
+                HealthTimer = HealthTime;
+            }
         }
     }
 
@@ -152,7 +180,7 @@ public class RubyController : MonoBehaviour
         scoreText.text = "Fixed Robots: " + score.ToString();
         ScoreScript.instance.SetText(scoreText);
 
-        if (score == 2) //change this number to how many robots are in the scene
+        if (score == 4) //change this number to how many robots are in the scene
         {
             winState = 1;
         }
