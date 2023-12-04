@@ -15,6 +15,17 @@ public class EnemyController : MonoBehaviour
     int direction = 1;
     bool broken = true;
     
+    //new variables for final project turret helper (Andrew) (putting the code in the enemy script because the turret also needs to be fixed)
+    public bool isTurret;
+    float turretShootTime = 2.0f;
+    float turretShootTimer;
+    bool canTurretShoot = true;
+    public AudioClip turretSound;
+    AudioSource audioSource;
+    Vector2 lookDirection = new Vector2(0,1);
+    public GameObject projectilePrefab;
+    public RubyController ruby;
+    
     Animator animator;
 
     private RubyController rubyController;
@@ -32,7 +43,7 @@ public class EnemyController : MonoBehaviour
         {
             rubyController = rubyControllerObject.GetComponent<RubyController>(); //storing the rubyController in a variable
 
-            print ("Found the RubyConroller Script!");
+            print ("Found the RubyController Script!");
         }
 
         if (rubyController == null)
@@ -43,7 +54,7 @@ public class EnemyController : MonoBehaviour
 
     void Update()
     {
-        //remember ! inverse the test, so if broken is true !broken will be false and return won’t be executed.
+        //remember ! inverse the test, so if broken is true !broken will be false and return won't be executed.
         if(!broken)
         {
             return;
@@ -60,7 +71,7 @@ public class EnemyController : MonoBehaviour
     
     void FixedUpdate()
     {
-        //remember ! inverse the test, so if broken is true !broken will be false and return won’t be executed.
+        //remember ! inverse the test, so if broken is true !broken will be false and return won't be executed.
         if(!broken)
         {
             return;
@@ -71,22 +82,45 @@ public class EnemyController : MonoBehaviour
         if (vertical)
         {
             position.y = position.y + Time.deltaTime * speed * direction;
-            animator.SetFloat("Move X", 0);
-            animator.SetFloat("Move Y", direction);
+            if (!isTurret)
+            {
+                animator.SetFloat("Move X", 0);
+                animator.SetFloat("Move Y", direction);
+            }
         }
         else
         {
             position.x = position.x + Time.deltaTime * speed * direction;
-            animator.SetFloat("Move X", direction);
-            animator.SetFloat("Move Y", 0);
+            if (!isTurret)
+            {
+                animator.SetFloat("Move X", direction);
+                animator.SetFloat("Move Y", 0);
+            }
         }
         
         rigidbody2D.MovePosition(position);
+
+        //NEW TURRET CODE FOR FINAL PROJECT (Andrew)
+        if (isTurret)
+        {
+            if (!canTurretShoot)
+            {
+                turretShootTimer -= Time.deltaTime;
+                if (turretShootTimer < 0)
+                    canTurretShoot = true;
+            } else
+            {
+                TurretShoot();
+            }
+
+            return;
+        }
+        //END OF NEW TURRET CODE FOR FINAL PROJECT (Andrew)
     }
     
     void OnCollisionEnter2D(Collision2D other)
     {
-        RubyController player = other.gameObject.GetComponent<RubyController >();
+        RubyController player = other.gameObject.GetComponent<RubyController>();
 
         if (player != null)
         {
@@ -94,6 +128,21 @@ public class EnemyController : MonoBehaviour
         }
     }
     
+    //NEW TURRET CODE FOR FINAL PROJECT (Andrew)
+    public void TurretShoot()
+    {
+        canTurretShoot = false;
+        turretShootTimer = turretShootTime;
+
+        GameObject projectileObject = Instantiate(projectilePrefab, rigidbody2D.position + Vector2.up * 1.0f, Quaternion.identity);
+
+        Projectile projectile = projectileObject.GetComponent<Projectile>();
+        projectile.Launch(lookDirection, 300);
+        
+        ruby.PlaySound(turretSound);
+    }
+    //END OF NEW TURRET CODE FOR FINAL PROJECT (Andrew)
+
     //Public because we want to call it from elsewhere like the projectile script
     public void Fix()
     {

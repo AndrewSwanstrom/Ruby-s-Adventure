@@ -30,6 +30,10 @@ public class RubyController : MonoBehaviour
     
     public AudioClip throwSound;
     public AudioClip hitSound;
+
+    public AudioClip winSound;
+    public AudioClip lossSound;
+    bool audioPlayed = false;
     
     public int health { get { return currentHealth; }}
     int currentHealth;
@@ -37,6 +41,15 @@ public class RubyController : MonoBehaviour
     public float timeInvincible = 2.0f;
     bool isInvincible;
     float invincibleTimer;
+
+    //new dash variables (made by Clay (with help from Andrew))
+    public float timeDashing = .05f;
+    bool isDashing;
+    float dashingTimer;
+    bool canDash = true;
+    public float timeCanDashing = 0.5f;
+    float canDashingTimer;
+    public AudioClip dashSound;
     
     Rigidbody2D rigidbody2d;
     float horizontal;
@@ -93,16 +106,50 @@ public class RubyController : MonoBehaviour
         if (IsReceivingDamage)
         {
             DamageTimer -= Time.deltaTime;
-            if (DamageTimer < 0)
+            if (DamageTimer < 0){
                 IsReceivingDamage = false;
+                Destroy(DamagePrefab);
+            }
         }
 
         if (IsReceivingHealth)
         {
             HealthTimer -= Time.deltaTime;
-            if (HealthTimer < 0)
+            if (HealthTimer < 0){
                 IsReceivingHealth = false;
+                Destroy(HealthPrefab);
+            }
         }
+
+        //NEW CODE MADE FOR FINAL PROJECT ASSIGNMENT: dash ability (made by Clay (with help from Andrew))
+        if (isDashing)
+        {
+            dashingTimer -= Time.deltaTime;
+            if (dashingTimer < 0){
+                isDashing = false;
+                speed = 3.0f;
+            }
+        }
+
+        if (!canDash)
+        {
+            print ("Reached the statement");
+            canDashingTimer -= Time.deltaTime;
+            if (canDashingTimer < 0){
+                canDash = true;
+                print ("Can Dash");
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Q) && currentHealth > 0 && canDash){
+            speed = 50.0f;
+            isDashing = true;
+            canDash = false;
+            dashingTimer = timeDashing;
+            canDashingTimer = timeCanDashing;
+            PlaySound(dashSound);
+        }
+        //END OF NEW DASH ABILITY CODE
         
         if(Input.GetKeyDown(KeyCode.C) && currentHealth > 0)
         {
@@ -180,7 +227,7 @@ public class RubyController : MonoBehaviour
         scoreText.text = "Fixed Robots: " + score.ToString();
         ScoreScript.instance.SetText(scoreText);
 
-        if (score == 4) //change this number to how many robots are in the scene
+        if (score == 5) //change this number to how many robots are in the scene
         {
             winState = 1;
         }
@@ -192,10 +239,20 @@ public class RubyController : MonoBehaviour
         {
             winText.text = "You Win! Game Created by Group 16";
             WinTextScript.instance.SetText(winText);
+            if (!audioPlayed)
+            {
+                PlaySound(winSound); //audio added by Andrew
+                audioPlayed = true;
+            }
         } else if (winState == 2)
         {
             winText.text = "Game Over! Press R to Restart";
             WinTextScript.instance.SetText(winText);
+            if (!audioPlayed)
+            {
+                PlaySound(lossSound); //audio added by Andrew
+                audioPlayed = true;
+            }
         } else if (winState == 0)
         {
             winText.text = "";
@@ -213,7 +270,7 @@ public class RubyController : MonoBehaviour
         animator.SetTrigger("Launch");
         
         PlaySound(throwSound);
-    } 
+    }
     
     public void PlaySound(AudioClip clip)
     {
